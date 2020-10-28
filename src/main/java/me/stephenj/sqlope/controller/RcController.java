@@ -13,6 +13,7 @@ import me.stephenj.sqlope.service.RcService;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @ClassName RcController.java
@@ -73,6 +75,36 @@ public class RcController {
             LOGGER.debug("add record failed:{}", rcAddParam);
             return CommonResult.failed("添加记录失败，其他原因");
         }
+    }
+
+    @ApiOperation("添加数据（多个）")
+    @RequestMapping(value = "/addn", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult addRc(@RequestBody RcAddParamList rcAddParamList, HttpServletRequest request) {
+        int count = 0;
+        Optional<List<List<ResultCell>>> rows = Optional.ofNullable(rcAddParamList.getRows());
+        if (!rows.isPresent() || rows.get().size() <= 0 ) {
+            LOGGER.debug("add data failed:{}", rcAddParamList);
+            return CommonResult.failed("添加记录失败，没有记录行");
+        }
+        for (List<ResultCell> row: rows.get()) {
+            RcAddParam rcAddParam = new RcAddParam();
+            BeanUtils.copyProperties(rcAddParamList, rcAddParam);
+            rcAddParam.setRow(row);
+            try {
+                count = rcService.addRc(rcAddParam);
+            } catch (DatabaseNotExistException | TableNotExistException e) {
+                LOGGER.debug("add data failed:{}", rcAddParam);
+                return CommonResult.failed(e.getMessage());
+            }
+            if (count != 1) {
+                LOGGER.debug("add record failed:{}", rcAddParam);
+                return CommonResult.failed("添加记录失败，其他原因");
+            }
+        }
+        logGenerator.log(request, "添加数据: 表格" + rcAddParamList.getName());
+        LOGGER.debug("add record success:{}", rcAddParamList);
+        return CommonResult.success(rcAddParamList);
     }
 
     @ApiOperation("更新数据")
