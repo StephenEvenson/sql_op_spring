@@ -6,7 +6,9 @@ import io.swagger.annotations.ApiParam;
 import me.stephenj.sqlope.Exception.*;
 import me.stephenj.sqlope.common.api.CommonResult;
 import me.stephenj.sqlope.common.utils.LogGenerator;
+import me.stephenj.sqlope.domain.DtDomain;
 import me.stephenj.sqlope.domain.DtParam;
+import me.stephenj.sqlope.domain.DtParamList;
 import me.stephenj.sqlope.domain.DtTemp;
 import me.stephenj.sqlope.mbg.model.Dt;
 import me.stephenj.sqlope.service.DtService;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName DtController.java
@@ -76,6 +80,38 @@ public class DtController {
             LOGGER.debug("create data failed:{}", dtTemp.getName());
             return CommonResult.failed("创建数据列失败，其他原因");
         }
+    }
+
+    @ApiOperation("创建数据列（多个）")
+    @RequestMapping(value = "/createn", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult createDts(@RequestBody DtParamList dtParamList, HttpServletRequest request) {
+        int count = 0;
+        DtTemp dtTemp = new DtTemp();
+        BeanUtils.copyProperties(dtParamList, dtTemp);
+        Optional<List<DtDomain>> dtDomains = Optional.ofNullable(dtParamList.getDtDomains());
+        if (dtDomains.isPresent() && dtDomains.get().size() > 0) {
+            for (DtDomain dtDomain: dtDomains.get()){
+                BeanUtils.copyProperties(dtDomain, dtTemp);
+                try {
+                    count = dtService.createDt(dtTemp);
+                } catch (TableNotExistException | DataNotCompleteException | DataNotExistException | DataExistException e) {
+                    LOGGER.debug("create data failed:{}", dtParamList.getTbId());
+                    return CommonResult.failed(e.getMessage());
+                }
+                if (count != 1) {
+                    LOGGER.debug("create data failed:{}", dtTemp.getName());
+                    return CommonResult.failed("创建数据列失败，其他原因");
+                }
+            }
+        } else {
+            LOGGER.debug("create data failed:{}", dtParamList.getTbId());
+            return CommonResult.failed("创建数据列失败，缺少数据列参数");
+        }
+        List<String> names = dtDomains.get().stream().map(DtDomain::getName).collect(Collectors.toList());
+        logGenerator.log(request, "创建数据列: " + names.toString());
+        LOGGER.debug("create data success:{}", names.toString());
+        return CommonResult.success(dtParamList);
     }
 
     @ApiOperation("删除数据列")
