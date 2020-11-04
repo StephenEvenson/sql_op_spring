@@ -39,13 +39,16 @@
     <javaClientGenerator type="XMLMAPPER" targetPackage="me.stephenj.sqlope.mbg.mapper"
                          targetProject="./src/main/java"/>
     <!--生成全部表tableName设为%-->
-    <table tableName="db">
+    <table tableName="table">
       <generatedKey column="id" sqlStatement="MySql" identity="true"/>
     </table>
-    <table tableName="tb">
+    <table tableName="data">
       <generatedKey column="id" sqlStatement="MySql" identity="true"/>
     </table>
-    <table tableName="dt">
+    <table tableName="row">
+      <generatedKey column="id" sqlStatement="MySql" identity="true"/>
+    </table>
+    <table tableName="field">
       <generatedKey column="id" sqlStatement="MySql" identity="true"/>
     </table>
     <table tableName="admin">

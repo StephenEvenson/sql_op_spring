@@ -1,17 +1,14 @@
 package me.stephenj.sqlope.service;
 
-import me.stephenj.sqlope.Exception.ConditionsException;
-import me.stephenj.sqlope.Exception.DatabaseNotExistException;
-import me.stephenj.sqlope.Exception.TableNotExistException;
-import me.stephenj.sqlope.domain.TbTemp;
+import me.stephenj.sqlope.Exception.*;
+import me.stephenj.sqlope.domain.RowListParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletOutputStream;
 import java.io.IOException;
-import java.sql.SQLException;
 
 public interface ExcelService {
-    String exportExcel(TbTemp tbTemp, ServletOutputStream out) throws DatabaseNotExistException, SQLException, ConditionsException, TableNotExistException;
+    String exportExcel(RowListParam rowListParam, ServletOutputStream out) throws TableNotExistException, FieldNotExistException, ConditionsException;
 
-    int importExcel(MultipartFile file) throws DatabaseNotExistException, TableNotExistException, IOException;
+    int importExcel(MultipartFile file) throws IOException, TableNotExistException, RowNotExistException, FieldNotExistException;
 }

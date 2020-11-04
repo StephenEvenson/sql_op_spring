@@ -2,26 +2,19 @@ package me.stephenj.sqlope.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
-import me.stephenj.sqlope.Exception.ConditionsException;
-import me.stephenj.sqlope.Exception.DatabaseNotExistException;
-import me.stephenj.sqlope.Exception.TableNotExistException;
-import me.stephenj.sqlope.common.utils.DBConnector;
+import me.stephenj.sqlope.Exception.*;
 import me.stephenj.sqlope.common.utils.SqlCheck;
-import me.stephenj.sqlope.common.utils.SqlGenerator;
-import me.stephenj.sqlope.domain.RcListParam;
-import me.stephenj.sqlope.domain.ResultCell;
-import me.stephenj.sqlope.domain.TbTemp;
-import me.stephenj.sqlope.mbg.mapper.TbMapper;
-import me.stephenj.sqlope.mbg.model.Tb;
-import me.stephenj.sqlope.mbg.model.TbExample;
+import me.stephenj.sqlope.common.utils.SqlRegistrant;
+import me.stephenj.sqlope.domain.RowListParam;
+import me.stephenj.sqlope.mbg.mapper.FieldMapper;
+import me.stephenj.sqlope.mbg.mapper.TableMapper;
+import me.stephenj.sqlope.mbg.model.*;
 import me.stephenj.sqlope.service.ExcelService;
-import me.stephenj.sqlope.service.RcService;
-import org.springframework.beans.BeanUtils;
+import me.stephenj.sqlope.service.RowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -30,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.ServletOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -45,58 +37,41 @@ public class ExcelServiceImpl implements ExcelService {
     @Autowired
     private SqlCheck sqlCheck;
     @Autowired
-    private RcService rcService;
     @Value("${file.path}")
     private String path;
     @Autowired
-    private TbMapper tbMapper;
+    private RowService rowService;
     @Autowired
-    private SqlGenerator sqlGenerator;
+    private TableMapper tableMapper;
     @Autowired
-    private DBConnector dbConnector;
+    private FieldMapper fieldMapper;
+    @Autowired
+    private SqlRegistrant sqlRegistrant;
 
     @Override
-    public String exportExcel(TbTemp tbTemp, ServletOutputStream out) throws DatabaseNotExistException, SQLException, ConditionsException, TableNotExistException {
-        sqlCheck.checkExportExcel(tbTemp);
-        ExcelWriter writer = ExcelUtil.getWriter(path + "/" + DateUtil.format(DateUtil.date(), "yyyyMMdd-HHmmss") + "/" + tbTemp.getDbName() + ".xls");
-        List<Tb> tbs;
-        if (tbTemp.getName() == null) {
-            TbExample tbExample = new TbExample();
-            tbExample.createCriteria().andDbIdEqualTo(tbTemp.getDbId());
-            tbs = tbMapper.selectByExample(tbExample);
-            for (int i = 0; i < tbs.size(); i++) {
-                writer.setSheet(i);
-                tbTemp.setId(tbs.get(i).getId());
-                tbTemp.setName(tbs.get(i).getName());
-                writeExcel(writer, tbTemp);
-            }
-        } else {
-            writeExcel(writer, tbTemp);
-        }
+    public String exportExcel(RowListParam rowListParam, ServletOutputStream out) throws TableNotExistException, FieldNotExistException, ConditionsException {
+        List<List<Data>> tables = rowService.listRows(rowListParam);
+        Table table = tableMapper.selectByPrimaryKey(rowListParam.getTableId());
+        ExcelWriter writer = ExcelUtil.getWriter(path + "/" + DateUtil.format(DateUtil.date(), "yyyyMMdd-HHmmss") + "/" + table.getName() + ".xls", table.getName());
+        writeExcel(writer, tables);
         writer.flush(out, true);
         writer.close();
         IoUtil.close(out);
-        return tbTemp.getDbName() + ".xls";
+        return table.getName() + ".xls";
     }
 
     @Override
-    public int importExcel(MultipartFile file) throws DatabaseNotExistException, IOException {
+    public int importExcel(MultipartFile file) throws IOException, TableNotExistException, RowNotExistException, FieldNotExistException {
         Optional<MultipartFile> fileOptional = Optional.ofNullable(file);
         if (fileOptional.isPresent()) {
-            TbTemp tbTemp = new TbTemp();
-            String name = FileUtil.mainName(fileOptional.get().getOriginalFilename());
-            tbTemp.setDbName(name);
-            sqlCheck.checkDbByName(tbTemp);
             ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
             List<String> sheets = reader.getSheetNames();
             for (String sheet: sheets) {
+                Table table = new Table();
+                table.setName(sheet);
+                sqlCheck.checkTableExist(table);
                 reader.setSheet(sheet);
-                tbTemp.setName(sheet);
-                if (sqlCheck.checkTbByName(tbTemp)) {
-                    if (readExcel(reader, tbTemp) == 0) {
-                        return 0;
-                    }
-                }
+                readExcel(reader, table);
             }
             return 1;
         } else {
@@ -104,35 +79,31 @@ public class ExcelServiceImpl implements ExcelService {
         }
     }
 
-    private int readExcel(ExcelReader reader, TbTemp tbTemp) {
+    private void readExcel(ExcelReader reader, Table table) throws FieldNotExistException, TableNotExistException, RowNotExistException {
         int columnCount = reader.getColumnCount();
         if (columnCount > 0) {
             List<Map<String, Object>> readAll = reader.readAll();
-            String importExcelSql = sqlGenerator.importExcel(readAll, tbTemp);
-            return dbConnector.execute(tbTemp.getDbName(), importExcelSql);
+            sqlRegistrant.importExcel(readAll, table);
         }
-        return 1;
     }
 
-    private void writeExcel(ExcelWriter writer, TbTemp tbTemp) throws SQLException, DatabaseNotExistException, ConditionsException, TableNotExistException {
-        writer.renameSheet(tbTemp.getName());
-        RcListParam rcListParam = new RcListParam();
-        BeanUtils.copyProperties(tbTemp, rcListParam);
-        List<List<ResultCell>> results = rcService.listRcs(rcListParam);
+    private void writeExcel(ExcelWriter writer, List<List<Data>> table) {
         ArrayList<Map<String, String>> rows = CollUtil.newArrayList();
-        for (List<ResultCell> resultCells : results) {
+        int count = 1;
+        Map<Integer, String> fields = new HashMap<>();
+        for (List<Data> dataList : table) {
             Map<String, String> row = new LinkedHashMap<>();
-            for (ResultCell resultCell : resultCells) {
-                row.put(resultCell.getName(), resultCell.getValue());
+            row.put("_id", String.valueOf(dataList.get(0).getRowId()));
+            for (Data data: dataList) {
+                if (count == 1) {
+                    fields.put(data.getFieldId(), fieldMapper.selectByPrimaryKey(data.getFieldId()).getName());
+                }
+                row.put(fields.get(data.getFieldId()), data.getValue());
             }
             rows.add(row);
+            count ++;
         }
         if (rows.size() > 0) {
-//            if (rows.get(0).size() > 1) {
-//                writer.merge(rows.get(0).size() - 1, tbTemp.getName());
-//            } else {
-//                writer.writeCellValue(0, 0, tbTemp.getName());
-//            }
             writer.write(rows, true);
         }
     }

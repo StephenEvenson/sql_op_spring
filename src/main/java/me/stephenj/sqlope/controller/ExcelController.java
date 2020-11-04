@@ -5,11 +5,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import me.stephenj.sqlope.Exception.ConditionsException;
-import me.stephenj.sqlope.Exception.DatabaseNotExistException;
+import me.stephenj.sqlope.Exception.FieldNotExistException;
+import me.stephenj.sqlope.Exception.RowNotExistException;
 import me.stephenj.sqlope.Exception.TableNotExistException;
 import me.stephenj.sqlope.common.api.CommonResult;
 import me.stephenj.sqlope.common.utils.LogGenerator;
-import me.stephenj.sqlope.domain.TbTemp;
+import me.stephenj.sqlope.domain.RowListParam;
 import me.stephenj.sqlope.service.ExcelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
 
 /**
  * @ClassName ExcelController.java
@@ -34,7 +34,7 @@ import java.sql.SQLException;
 @Controller
 @RequestMapping("/excel")
 public class ExcelController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TbController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExcelController.class);
     @Autowired
     private ExcelService excelService;
     @Autowired
@@ -42,11 +42,12 @@ public class ExcelController {
     @ApiOperation("导出Excel")
     @RequestMapping(value = "/export", method = RequestMethod.POST)
     @ResponseBody
-    public CommonResult exportExcel(@RequestBody TbTemp tbTemp, HttpServletResponse response) {
+    public CommonResult exportExcel(@RequestBody RowListParam rowListParam,
+                                    HttpServletResponse response) {
         String fileName = null;
         try {
-            fileName = excelService.exportExcel(tbTemp, response.getOutputStream());
-        } catch (TableNotExistException | IOException | DatabaseNotExistException | SQLException | ConditionsException e) {
+            fileName = excelService.exportExcel(rowListParam, response.getOutputStream());
+        } catch (TableNotExistException | IOException | FieldNotExistException | ConditionsException e) {
             LOGGER.error("导出Excel表格失败" + e.getMessage());
             return CommonResult.failed(e.getMessage());
         }
@@ -64,7 +65,7 @@ public class ExcelController {
         int count = 0;
         try {
             count = excelService.importExcel(file);
-        } catch (TableNotExistException | DatabaseNotExistException | IOException e) {
+        } catch (TableNotExistException | IOException | RowNotExistException | FieldNotExistException e) {
             LOGGER.error("import Excel failed:{}", e.getMessage());
             return CommonResult.failed(e.getMessage());
         }
@@ -73,8 +74,8 @@ public class ExcelController {
             LOGGER.info("import excel success");
             return CommonResult.success(FileUtil.mainName(file.getOriginalFilename()));
         } else {
-            LOGGER.error("import excel failed: 执行sql语句失败");
-            return CommonResult.failed("import Excel failed: 执行sql语句失败");
+            LOGGER.error("import excel failed: 其他原因");
+            return CommonResult.failed("导入Excel表格失败: 其他原因");
         }
     }
 }

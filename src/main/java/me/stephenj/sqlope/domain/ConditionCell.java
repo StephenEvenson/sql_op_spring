@@ -3,8 +3,8 @@ package me.stephenj.sqlope.domain;
 import io.swagger.annotations.ApiModelProperty;
 
 public class ConditionCell {
-    @ApiModelProperty(value = "列名")
-    private String name;
+    @ApiModelProperty(value = "字段序号")
+    private Integer fieldId;
 
     @ApiModelProperty(value = "值")
     private String value;
@@ -15,12 +15,12 @@ public class ConditionCell {
     @ApiModelProperty(value = "逻辑关系（0->AND, 1->OR")
     private int logic;
 
-    public String getName() {
-        return name;
+    public Integer getFieldId() {
+        return fieldId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFieldId(Integer fieldId) {
+        this.fieldId = fieldId;
     }
 
     public String getValue() {

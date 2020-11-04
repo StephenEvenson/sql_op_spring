@@ -33,4 +33,5 @@ build/
 .vscode/
 
 sqlope.log
+sqlope.log.*
 /logs/sqlopt.log

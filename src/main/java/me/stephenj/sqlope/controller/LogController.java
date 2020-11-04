@@ -35,7 +35,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/log")
 public class LogController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TbController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogController.class);
     @Autowired
     private LogService logService;
 
