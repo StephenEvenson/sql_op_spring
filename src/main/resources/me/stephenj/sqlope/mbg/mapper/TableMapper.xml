@@ -9,6 +9,7 @@
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="row_count" jdbcType="INTEGER" property="rowCount" />
     <result column="fk" jdbcType="INTEGER" property="fk" />
+    <result column="locked" jdbcType="INTEGER" property="locked" />
     <result column="status" jdbcType="BIT" property="status" />
   </resultMap>
   <sql id="Example_Where_Clause">
@@ -70,7 +71,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, name, description, author_id, create_time, row_count, fk, status
+    id, name, description, author_id, create_time, row_count, fk, locked, status
   </sql>
   <select id="selectByExample" parameterType="me.stephenj.sqlope.mbg.model.TableExample" resultMap="BaseResultMap">
     select
@@ -102,18 +103,18 @@
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
-  <insert id="insert" parameterType="me.stephenj.sqlope.mbg.model.Table">
+  <insert id="insert" parameterType="me.stephenj.sqlope.mbg.model.Table" useGeneratedKeys="true" keyProperty="id">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
     insert into table (name, description, author_id, 
       create_time, row_count, fk, 
-      status)
+      locked, status)
     values (#{name,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{authorId,jdbcType=INTEGER}, 
       #{createTime,jdbcType=TIMESTAMP}, #{rowCount,jdbcType=INTEGER}, #{fk,jdbcType=INTEGER}, 
-      #{status,jdbcType=BIT})
+      #{locked,jdbcType=INTEGER}, #{status,jdbcType=BIT})
   </insert>
-  <insert id="insertSelective" parameterType="me.stephenj.sqlope.mbg.model.Table">
+  <insert id="insertSelective" parameterType="me.stephenj.sqlope.mbg.model.Table" useGeneratedKeys="true" keyProperty="id">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
@@ -137,6 +138,9 @@
       <if test="fk != null">
         fk,
       </if>
+      <if test="locked != null">
+        locked,
+      </if>
       <if test="status != null">
         status,
       </if>
@@ -159,6 +163,9 @@
       </if>
       <if test="fk != null">
         #{fk,jdbcType=INTEGER},
+      </if>
+      <if test="locked != null">
+        #{locked,jdbcType=INTEGER},
       </if>
       <if test="status != null">
         #{status,jdbcType=BIT},
@@ -195,6 +202,9 @@
       <if test="record.fk != null">
         fk = #{record.fk,jdbcType=INTEGER},
       </if>
+      <if test="record.locked != null">
+        locked = #{record.locked,jdbcType=INTEGER},
+      </if>
       <if test="record.status != null">
         status = #{record.status,jdbcType=BIT},
       </if>
@@ -212,6 +222,7 @@
       create_time = #{record.createTime,jdbcType=TIMESTAMP},
       row_count = #{record.rowCount,jdbcType=INTEGER},
       fk = #{record.fk,jdbcType=INTEGER},
+      locked = #{record.locked,jdbcType=INTEGER},
       status = #{record.status,jdbcType=BIT}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -238,6 +249,9 @@
       <if test="fk != null">
         fk = #{fk,jdbcType=INTEGER},
       </if>
+      <if test="locked != null">
+        locked = #{locked,jdbcType=INTEGER},
+      </if>
       <if test="status != null">
         status = #{status,jdbcType=BIT},
       </if>
@@ -252,6 +266,7 @@
       create_time = #{createTime,jdbcType=TIMESTAMP},
       row_count = #{rowCount,jdbcType=INTEGER},
       fk = #{fk,jdbcType=INTEGER},
+      locked = #{locked,jdbcType=INTEGER},
       status = #{status,jdbcType=BIT}
     where id = #{id,jdbcType=INTEGER}
   </update>

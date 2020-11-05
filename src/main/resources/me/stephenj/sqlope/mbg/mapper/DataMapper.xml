@@ -7,6 +7,7 @@
     <result column="field_id" jdbcType="INTEGER" property="fieldId" />
     <result column="row_id" jdbcType="INTEGER" property="rowId" />
     <result column="value" jdbcType="VARCHAR" property="value" />
+    <result column="fk" jdbcType="INTEGER" property="fk" />
     <result column="locked" jdbcType="INTEGER" property="locked" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="modify_time" jdbcType="TIMESTAMP" property="modifyTime" />
@@ -70,7 +71,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, table_id, field_id, row_id, value, locked, create_time, modify_time
+    id, table_id, field_id, row_id, value, fk, locked, create_time, modify_time
   </sql>
   <select id="selectByExample" parameterType="me.stephenj.sqlope.mbg.model.DataExample" resultMap="BaseResultMap">
     select
@@ -102,18 +103,18 @@
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
-  <insert id="insert" parameterType="me.stephenj.sqlope.mbg.model.Data">
+  <insert id="insert" parameterType="me.stephenj.sqlope.mbg.model.Data" useGeneratedKeys="true" keyProperty="id">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
     insert into data (table_id, field_id, row_id, 
-      value, locked, create_time, 
-      modify_time)
+      value, fk, locked, 
+      create_time, modify_time)
     values (#{tableId,jdbcType=INTEGER}, #{fieldId,jdbcType=INTEGER}, #{rowId,jdbcType=INTEGER}, 
-      #{value,jdbcType=VARCHAR}, #{locked,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, 
-      #{modifyTime,jdbcType=TIMESTAMP})
+      #{value,jdbcType=VARCHAR}, #{fk,jdbcType=INTEGER}, #{locked,jdbcType=INTEGER}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{modifyTime,jdbcType=TIMESTAMP})
   </insert>
-  <insert id="insertSelective" parameterType="me.stephenj.sqlope.mbg.model.Data">
+  <insert id="insertSelective" parameterType="me.stephenj.sqlope.mbg.model.Data" useGeneratedKeys="true" keyProperty="id">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
@@ -130,6 +131,9 @@
       </if>
       <if test="value != null">
         value,
+      </if>
+      <if test="fk != null">
+        fk,
       </if>
       <if test="locked != null">
         locked,
@@ -153,6 +157,9 @@
       </if>
       <if test="value != null">
         #{value,jdbcType=VARCHAR},
+      </if>
+      <if test="fk != null">
+        #{fk,jdbcType=INTEGER},
       </if>
       <if test="locked != null">
         #{locked,jdbcType=INTEGER},
@@ -189,6 +196,9 @@
       <if test="record.value != null">
         value = #{record.value,jdbcType=VARCHAR},
       </if>
+      <if test="record.fk != null">
+        fk = #{record.fk,jdbcType=INTEGER},
+      </if>
       <if test="record.locked != null">
         locked = #{record.locked,jdbcType=INTEGER},
       </if>
@@ -210,6 +220,7 @@
       field_id = #{record.fieldId,jdbcType=INTEGER},
       row_id = #{record.rowId,jdbcType=INTEGER},
       value = #{record.value,jdbcType=VARCHAR},
+      fk = #{record.fk,jdbcType=INTEGER},
       locked = #{record.locked,jdbcType=INTEGER},
       create_time = #{record.createTime,jdbcType=TIMESTAMP},
       modify_time = #{record.modifyTime,jdbcType=TIMESTAMP}
@@ -232,6 +243,9 @@
       <if test="value != null">
         value = #{value,jdbcType=VARCHAR},
       </if>
+      <if test="fk != null">
+        fk = #{fk,jdbcType=INTEGER},
+      </if>
       <if test="locked != null">
         locked = #{locked,jdbcType=INTEGER},
       </if>
@@ -250,6 +264,7 @@
       field_id = #{fieldId,jdbcType=INTEGER},
       row_id = #{rowId,jdbcType=INTEGER},
       value = #{value,jdbcType=VARCHAR},
+      fk = #{fk,jdbcType=INTEGER},
       locked = #{locked,jdbcType=INTEGER},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       modify_time = #{modifyTime,jdbcType=TIMESTAMP}

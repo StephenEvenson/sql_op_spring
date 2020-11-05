@@ -99,7 +99,7 @@
       <include refid="Example_Where_Clause" />
     </if>
   </delete>
-  <insert id="insert" parameterType="me.stephenj.sqlope.mbg.model.Row">
+  <insert id="insert" parameterType="me.stephenj.sqlope.mbg.model.Row" useGeneratedKeys="true" keyProperty="id">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
@@ -108,7 +108,7 @@
     values (#{tableId,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{modifyTime,jdbcType=TIMESTAMP}, 
       #{status,jdbcType=BIT})
   </insert>
-  <insert id="insertSelective" parameterType="me.stephenj.sqlope.mbg.model.Row">
+  <insert id="insertSelective" parameterType="me.stephenj.sqlope.mbg.model.Row" useGeneratedKeys="true" keyProperty="id">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
       SELECT LAST_INSERT_ID()
     </selectKey>
