@@ -32,6 +32,9 @@ public class Data implements Serializable {
     @ApiModelProperty(value = "数据字段修改时间")
     private Date modifyTime;
 
+    @ApiModelProperty(value = "是否可用")
+    private Boolean status;
+
     private static final long serialVersionUID = 1L;
 
     public Integer getId() {
@@ -106,6 +109,14 @@ public class Data implements Serializable {
         this.modifyTime = modifyTime;
     }
 
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -121,6 +132,7 @@ public class Data implements Serializable {
         sb.append(", locked=").append(locked);
         sb.append(", createTime=").append(createTime);
         sb.append(", modifyTime=").append(modifyTime);
+        sb.append(", status=").append(status);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

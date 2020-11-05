@@ -11,6 +11,7 @@
     <result column="locked" jdbcType="INTEGER" property="locked" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="modify_time" jdbcType="TIMESTAMP" property="modifyTime" />
+    <result column="status" jdbcType="BIT" property="status" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -71,7 +72,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, table_id, field_id, row_id, value, fk, locked, create_time, modify_time
+    id, table_id, field_id, row_id, value, fk, locked, create_time, modify_time, status
   </sql>
   <select id="selectByExample" parameterType="me.stephenj.sqlope.mbg.model.DataExample" resultMap="BaseResultMap">
     select
@@ -109,10 +110,12 @@
     </selectKey>
     insert into data (table_id, field_id, row_id, 
       value, fk, locked, 
-      create_time, modify_time)
+      create_time, modify_time, status
+      )
     values (#{tableId,jdbcType=INTEGER}, #{fieldId,jdbcType=INTEGER}, #{rowId,jdbcType=INTEGER}, 
       #{value,jdbcType=VARCHAR}, #{fk,jdbcType=INTEGER}, #{locked,jdbcType=INTEGER}, 
-      #{createTime,jdbcType=TIMESTAMP}, #{modifyTime,jdbcType=TIMESTAMP})
+      #{createTime,jdbcType=TIMESTAMP}, #{modifyTime,jdbcType=TIMESTAMP}, #{status,jdbcType=BIT}
+      )
   </insert>
   <insert id="insertSelective" parameterType="me.stephenj.sqlope.mbg.model.Data" useGeneratedKeys="true" keyProperty="id">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
@@ -144,6 +147,9 @@
       <if test="modifyTime != null">
         modify_time,
       </if>
+      <if test="status != null">
+        status,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="tableId != null">
@@ -169,6 +175,9 @@
       </if>
       <if test="modifyTime != null">
         #{modifyTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=BIT},
       </if>
     </trim>
   </insert>
@@ -208,6 +217,9 @@
       <if test="record.modifyTime != null">
         modify_time = #{record.modifyTime,jdbcType=TIMESTAMP},
       </if>
+      <if test="record.status != null">
+        status = #{record.status,jdbcType=BIT},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -223,7 +235,8 @@
       fk = #{record.fk,jdbcType=INTEGER},
       locked = #{record.locked,jdbcType=INTEGER},
       create_time = #{record.createTime,jdbcType=TIMESTAMP},
-      modify_time = #{record.modifyTime,jdbcType=TIMESTAMP}
+      modify_time = #{record.modifyTime,jdbcType=TIMESTAMP},
+      status = #{record.status,jdbcType=BIT}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -255,6 +268,9 @@
       <if test="modifyTime != null">
         modify_time = #{modifyTime,jdbcType=TIMESTAMP},
       </if>
+      <if test="status != null">
+        status = #{status,jdbcType=BIT},
+      </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
@@ -267,7 +283,8 @@
       fk = #{fk,jdbcType=INTEGER},
       locked = #{locked,jdbcType=INTEGER},
       create_time = #{createTime,jdbcType=TIMESTAMP},
-      modify_time = #{modifyTime,jdbcType=TIMESTAMP}
+      modify_time = #{modifyTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=BIT}
     where id = #{id,jdbcType=INTEGER}
   </update>
 </mapper>
