@@ -26,6 +26,9 @@ public class Table implements Serializable {
     @ApiModelProperty(value = "外键")
     private Integer fk;
 
+    @ApiModelProperty(value = "被几张表锁定了")
+    private Integer locked;
+
     @ApiModelProperty(value = "是否可用")
     private Boolean status;
 
@@ -87,6 +90,14 @@ public class Table implements Serializable {
         this.fk = fk;
     }
 
+    public Integer getLocked() {
+        return locked;
+    }
+
+    public void setLocked(Integer locked) {
+        this.locked = locked;
+    }
+
     public Boolean getStatus() {
         return status;
     }
@@ -108,6 +119,7 @@ public class Table implements Serializable {
         sb.append(", createTime=").append(createTime);
         sb.append(", rowCount=").append(rowCount);
         sb.append(", fk=").append(fk);
+        sb.append(", locked=").append(locked);
         sb.append(", status=").append(status);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");

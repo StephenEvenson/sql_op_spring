@@ -20,7 +20,10 @@ public class Data implements Serializable {
     @ApiModelProperty(value = "数据值")
     private String value;
 
-    @ApiModelProperty(value = "被哪个数据锁定了")
+    @ApiModelProperty(value = "外键指向的数据")
+    private Integer fk;
+
+    @ApiModelProperty(value = "被几个数据锁定了")
     private Integer locked;
 
     @ApiModelProperty(value = "数据字段创建时间")
@@ -71,6 +74,14 @@ public class Data implements Serializable {
         this.value = value;
     }
 
+    public Integer getFk() {
+        return fk;
+    }
+
+    public void setFk(Integer fk) {
+        this.fk = fk;
+    }
+
     public Integer getLocked() {
         return locked;
     }
@@ -106,6 +117,7 @@ public class Data implements Serializable {
         sb.append(", fieldId=").append(fieldId);
         sb.append(", rowId=").append(rowId);
         sb.append(", value=").append(value);
+        sb.append(", fk=").append(fk);
         sb.append(", locked=").append(locked);
         sb.append(", createTime=").append(createTime);
         sb.append(", modifyTime=").append(modifyTime);

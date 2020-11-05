@@ -20,10 +20,10 @@ public class Field implements Serializable {
     @ApiModelProperty(value = "字段类型")
     private String type;
 
-    @ApiModelProperty(value = "外键")
+    @ApiModelProperty(value = "外键指向的字段")
     private Integer fk;
 
-    @ApiModelProperty(value = "被哪个字段锁定了")
+    @ApiModelProperty(value = "被几个字段锁定了")
     private Integer locked;
 
     @ApiModelProperty(value = "数据字段创建时间")

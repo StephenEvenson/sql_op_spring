@@ -545,6 +545,66 @@ public class TableExample {
             return (Criteria) this;
         }
 
+        public Criteria andLockedIsNull() {
+            addCriterion("locked is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedIsNotNull() {
+            addCriterion("locked is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedEqualTo(Integer value) {
+            addCriterion("locked =", value, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedNotEqualTo(Integer value) {
+            addCriterion("locked <>", value, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedGreaterThan(Integer value) {
+            addCriterion("locked >", value, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedGreaterThanOrEqualTo(Integer value) {
+            addCriterion("locked >=", value, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedLessThan(Integer value) {
+            addCriterion("locked <", value, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedLessThanOrEqualTo(Integer value) {
+            addCriterion("locked <=", value, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedIn(List<Integer> values) {
+            addCriterion("locked in", values, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedNotIn(List<Integer> values) {
+            addCriterion("locked not in", values, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedBetween(Integer value1, Integer value2) {
+            addCriterion("locked between", value1, value2, "locked");
+            return (Criteria) this;
+        }
+
+        public Criteria andLockedNotBetween(Integer value1, Integer value2) {
+            addCriterion("locked not between", value1, value2, "locked");
+            return (Criteria) this;
+        }
+
         public Criteria andStatusIsNull() {
             addCriterion("status is null");
             return (Criteria) this;

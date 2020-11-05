@@ -420,6 +420,66 @@ public class DataExample {
             return (Criteria) this;
         }
 
+        public Criteria andFkIsNull() {
+            addCriterion("fk is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkIsNotNull() {
+            addCriterion("fk is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkEqualTo(Integer value) {
+            addCriterion("fk =", value, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkNotEqualTo(Integer value) {
+            addCriterion("fk <>", value, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkGreaterThan(Integer value) {
+            addCriterion("fk >", value, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkGreaterThanOrEqualTo(Integer value) {
+            addCriterion("fk >=", value, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkLessThan(Integer value) {
+            addCriterion("fk <", value, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkLessThanOrEqualTo(Integer value) {
+            addCriterion("fk <=", value, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkIn(List<Integer> values) {
+            addCriterion("fk in", values, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkNotIn(List<Integer> values) {
+            addCriterion("fk not in", values, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkBetween(Integer value1, Integer value2) {
+            addCriterion("fk between", value1, value2, "fk");
+            return (Criteria) this;
+        }
+
+        public Criteria andFkNotBetween(Integer value1, Integer value2) {
+            addCriterion("fk not between", value1, value2, "fk");
+            return (Criteria) this;
+        }
+
         public Criteria andLockedIsNull() {
             addCriterion("locked is null");
             return (Criteria) this;

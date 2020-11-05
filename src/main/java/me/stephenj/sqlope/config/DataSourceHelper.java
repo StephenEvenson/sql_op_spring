@@ -58,6 +58,7 @@ public class DataSourceHelper {
                     "`create_time` DATETIME DEFAULT NOW() COMMENT '数据表创建时间', " +
                     "`row_count` INT DEFAULT 0 COMMENT '数据表中有效记录的行数', " +
                     "`fk` INT DEFAULT 0 COMMENT '外键', " +
+                    "`locked` INT DEFAULT 0 COMMENT '被几张表锁定了', " +
                     "`status` BOOLEAN DEFAULT TRUE COMMENT '是否可用', " +
                     "PRIMARY KEY (`id`), " +
                     "CONSTRAINT tb_admin_id_fk FOREIGN KEY (`author_id`) REFERENCES `admin` (`id`)" +
@@ -69,8 +70,8 @@ public class DataSourceHelper {
                     "`name` VARCHAR(255) COMMENT '字段名', " +
                     "`description` VARCHAR(255) COMMENT '字段描述', " +
                     "`type` VARCHAR(255) COMMENT '字段类型', " +
-                    "`fk` INT DEFAULT -1 COMMENT '外键', " +
-                    "`locked` INT DEFAULT -1 COMMENT '被哪个字段锁定了', " +
+                    "`fk` INT DEFAULT -1 COMMENT '外键指向的字段', " +
+                    "`locked` INT DEFAULT 0 COMMENT '被几个字段锁定了', " +
                     "`create_time` DATETIME DEFAULT NOW() COMMENT '数据字段创建时间', " +
                     "`modify_time` DATETIME DEFAULT NOW() COMMENT '数据字段修改时间', " +
                     "`status` BOOLEAN DEFAULT TRUE COMMENT '是否可用', " +
@@ -92,7 +93,8 @@ public class DataSourceHelper {
                     "`field_id` INT COMMENT '数据字段序号', " +
                     "`row_id` INT COMMENT '数据行序号', " +
                     "`value` VARCHAR(255) COMMENT '数据值', " +
-                    "`locked` INT DEFAULT -1 COMMENT '被哪个数据锁定了', " +
+                    "`fk` INT DEFAULT -1 COMMENT '外键指向的数据', " +
+                    "`locked` INT DEFAULT 0 COMMENT '被几个数据锁定了', " +
                     "`create_time` DATETIME DEFAULT NOW() COMMENT '数据字段创建时间', " +
                     "`modify_time` DATETIME DEFAULT NOW() COMMENT '数据字段修改时间', " +
                     "PRIMARY KEY (`id`), " +
