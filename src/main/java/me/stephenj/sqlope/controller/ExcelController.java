@@ -4,10 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import me.stephenj.sqlope.Exception.ConditionsException;
-import me.stephenj.sqlope.Exception.FieldNotExistException;
-import me.stephenj.sqlope.Exception.RowNotExistException;
-import me.stephenj.sqlope.Exception.TableNotExistException;
+import me.stephenj.sqlope.Exception.*;
 import me.stephenj.sqlope.common.api.CommonResult;
 import me.stephenj.sqlope.common.utils.LogGenerator;
 import me.stephenj.sqlope.domain.RowListParam;
@@ -65,7 +62,7 @@ public class ExcelController {
         int count = 0;
         try {
             count = excelService.importExcel(file);
-        } catch (TableNotExistException | IOException | RowNotExistException | FieldNotExistException e) {
+        } catch (TableNotExistException | IOException | RowNotExistException | FieldNotExistException | ForeignKeyExistException e) {
             LOGGER.error("import Excel failed:{}", e.getMessage());
             return CommonResult.failed(e.getMessage());
         }

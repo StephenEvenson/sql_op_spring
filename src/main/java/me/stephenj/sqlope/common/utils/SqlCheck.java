@@ -60,32 +60,36 @@ public class SqlCheck {
             if (!fieldOptional.get().getTableId().equals(fieldDomain.getTargetTable())) {
                 throw new FieldNotExistException("外键所指向的字段不在外键所指向的表格中");
             }
+            
         }
         return true;
     }
 
     public boolean checkDropTable(int tableId) throws TableNotExistException, ForeignKeyExistException {
         checkTableExist(tableId);
-        FieldExample fieldExample = new FieldExample();
-        fieldExample.createCriteria().andTableIdEqualTo(tableId);
-        Integer[] fieldIds = Arrays
-                .stream(
-                fieldMapper.selectByExample(fieldExample)
-                .stream()
-                .mapToInt(Field::getId)
-                .toArray()
-                ).boxed()
-                .toArray(Integer[]::new);
-        for (Field field: fieldMapper.selectByExample(new FieldExample())) {
-            if (Arrays.asList(fieldIds).contains(field.getFk())) {
-                throw new ForeignKeyExistException("该表无法删除，存在指向该表的外键: 表" +
-                        tableMapper.selectByPrimaryKey(field.getTableId()).getName() +
-                        "的字段" +
-                        field.getName() +
-                        "指向该表的字段" +
-                        fieldMapper.selectByPrimaryKey(field.getFk()).getName());
-            }
+        if (tableMapper.selectByPrimaryKey(tableId).getLocked() > 0) {
+            throw new ForeignKeyExistException("该表无法删除，存在指向该表的外键");
         }
+//        FieldExample fieldExample = new FieldExample();
+//        fieldExample.createCriteria().andTableIdEqualTo(tableId);
+//        Integer[] fieldIds = Arrays
+//                .stream(
+//                fieldMapper.selectByExample(fieldExample)
+//                .stream()
+//                .mapToInt(Field::getId)
+//                .toArray()
+//                ).boxed()
+//                .toArray(Integer[]::new);
+//        for (Field field: fieldMapper.selectByExample(new FieldExample())) {
+//            if (Arrays.asList(fieldIds).contains(field.getFk())) {
+//                throw new ForeignKeyExistException("该表无法删除，存在指向该表的外键: 表" +
+//                        tableMapper.selectByPrimaryKey(field.getTableId()).getName() +
+//                        "的字段" +
+//                        field.getName() +
+//                        "指向该表的字段" +
+//                        fieldMapper.selectByPrimaryKey(field.getFk()).getName());
+//            }
+//        }
         return true;
     }
 
@@ -156,17 +160,22 @@ public class SqlCheck {
     public boolean checkDropField(int fieldId) throws ForeignKeyExistException, TableEmptyException, FieldNotExistException {
         checkField(fieldId);
 
-        FieldExample srcFieldExample = new FieldExample();
-        srcFieldExample.createCriteria().andStatusEqualTo(true).andFkEqualTo(fieldId);
-        List<Field> srcFields = fieldMapper.selectByExample(srcFieldExample);
-        if (!srcFields.isEmpty()) {
-            Field srcField = srcFields.get(0);
-            Table srcTable = tableMapper.selectByPrimaryKey(srcField.getTableId());
-            throw new ForeignKeyExistException(srcTable.getName(), srcField.getName());
+        Field field = fieldMapper.selectByPrimaryKey(fieldId);
+        int tableId = field.getTableId();
+        if (field.getLocked() > 0) {
+            throw new ForeignKeyExistException("存在外间指向该字段");
         }
+//        FieldExample srcFieldExample = new FieldExample();
+//        srcFieldExample.createCriteria().andStatusEqualTo(true).andFkEqualTo(fieldId);
+//        List<Field> srcFields = fieldMapper.selectByExample(srcFieldExample);
+//        if (!srcFields.isEmpty()) {
+//            Field srcField = srcFields.get(0);
+//            Table srcTable = tableMapper.selectByPrimaryKey(srcField.getTableId());
+//            throw new ForeignKeyExistException(srcTable.getName(), srcField.getName());
+//        }
 
         FieldExample fieldExample = new FieldExample();
-        fieldExample.createCriteria().andStatusEqualTo(true).andTableIdEqualTo(fieldMapper.selectByPrimaryKey(fieldId).getTableId());
+        fieldExample.createCriteria().andStatusEqualTo(true).andTableIdEqualTo(tableId);
         List<Field> fields = fieldMapper.selectByExample(fieldExample);
         if (fields.size() < 2) {
             throw new TableEmptyException("数据表中的字段个数不能为0");
@@ -198,20 +207,65 @@ public class SqlCheck {
         return true;
     }
 
-    public boolean checkAddRow(RowAddParam rowAddParam) throws TableNotExistException, FieldNotExistException {
-        checkTableExist(rowAddParam.getTableId());
-        for (List<DataDomain> row: rowAddParam.getFields()) {
-            for (DataDomain dataDomain : row) {
-                checkField(dataDomain.getFieldId());
+    public boolean checkUnique(Integer fieldId, String value) throws ForeignKeyExistException {
+        Field field = fieldMapper.selectByPrimaryKey(fieldId);
+        if (field.getLocked() > 0) {
+            DataExample dataExample = new DataExample();
+            dataExample.createCriteria().andFieldIdEqualTo(fieldId).andStatusEqualTo(true);
+            List<Data> dataList = dataMapper.selectByExample(dataExample);
+            List<String> values = dataList.stream().map(Data::getValue).collect(Collectors.toList());
+            if (values.contains(value)) {
+                throw new ForeignKeyExistException("存在指向字段" + field.getName() + "的外键，值" + value + "和已存在的值重复");
             }
         }
         return true;
     }
 
-    public boolean checkUpdateRow(RowUpdateParam rowUpdateParam) throws RowNotExistException, FieldNotExistException {
-        checkRow(rowUpdateParam.getRowId());
-        for (DataDomain dataDomain: rowUpdateParam.getFields()) {
-            checkField(dataDomain.getFieldId());
+    public boolean checkDataFk(int targetFieldId, String value, Map<String, Integer> targetDataId) throws ForeignKeyExistException {
+        if (targetFieldId > 0) {
+            DataExample dataExample = new DataExample();
+            dataExample.createCriteria().andFieldIdEqualTo(targetFieldId).andValueEqualTo(value);
+            List<Data> dataList = dataMapper.selectByExample(dataExample);
+            if (dataList.isEmpty()) {
+                throw new ForeignKeyExistException("存在外键约束，外键指向的字段中无相应的数据");
+            } else {
+                targetDataId.put(value, dataList.get(0).getId());
+            }
+        } else {
+            targetDataId.put(value, -1);
+        }
+        return true;
+    }
+
+    public void loadTargetFieldId(int fieldId, Map<Integer, Integer> targetFieldIdMap) {
+        targetFieldIdMap.put(fieldId ,fieldMapper.selectByPrimaryKey(fieldId).getFk());
+    }
+
+    public boolean checkAddRow(RowAddTemp rowAddTemp) throws TableNotExistException, FieldNotExistException, ForeignKeyExistException {
+        checkTableExist(rowAddTemp.getTableId());
+        HashMap<Integer, Integer> targetFieldIdMap = rowAddTemp.getTargetFieldIdMap();
+        for (List<DataDomain> row: rowAddTemp.getFields()) {
+            for (DataDomain dataDomain : row) {
+                Integer fieldId = dataDomain.getFieldId();
+                checkField(fieldId);
+                checkUnique(fieldId, dataDomain.getValue());
+                if (!targetFieldIdMap.containsKey(fieldId)) {
+                    loadTargetFieldId(fieldId, targetFieldIdMap);
+                }
+                checkDataFk(targetFieldIdMap.get(fieldId), dataDomain.getValue(), rowAddTemp.getTargetDataIdMap());
+            }
+        }
+        return true;
+    }
+
+    public boolean checkUpdateRow(RowUpdateTemp rowUpdateTemp) throws RowNotExistException, FieldNotExistException, ForeignKeyExistException {
+        checkRow(rowUpdateTemp.getRowId());
+        for (DataDomain dataDomain: rowUpdateTemp.getFields()) {
+            Integer fieldId = dataDomain.getFieldId();
+            checkField(fieldId);
+            checkUnique(fieldId, dataDomain.getValue());
+            loadTargetFieldId(fieldId, rowUpdateTemp.getTargetFieldIdMap());
+            checkDataFk(rowUpdateTemp.getTargetFieldIdMap().get(fieldId), dataDomain.getValue(), rowUpdateTemp.getTargetDataIdMap());
         }
         return true;
     }

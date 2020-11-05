@@ -1,6 +1,7 @@
 package me.stephenj.sqlope.common.utils;
 
 import me.stephenj.sqlope.Exception.FieldNotExistException;
+import me.stephenj.sqlope.Exception.ForeignKeyExistException;
 import me.stephenj.sqlope.Exception.RowNotExistException;
 import me.stephenj.sqlope.Exception.TableNotExistException;
 import me.stephenj.sqlope.domain.*;
@@ -38,12 +39,24 @@ public class SqlRegistrant {
         TableExample tableExample = new TableExample();
         tableExample.createCriteria().andNameEqualTo(tableParam.getName());
         table.setFk((int) tableParam.getFields().stream().filter(FieldDomain::isForeignkey).count());
-        tableMapper.insert(table);
+        tableMapper.insertSelective(table);
 
         FieldParam fieldParam = new FieldParam();
-        fieldParam.setTableId(tableMapper.selectByExample(tableExample).get(0).getId());
+        fieldParam.setTableId(table.getId());
         fieldParam.setFieldDomains(tableParam.getFields());
         createField(fieldParam);
+    }
+
+    public void setTableLocked(int targetTableId) {
+        Table targetTable = tableMapper.selectByPrimaryKey(targetTableId);
+        targetTable.setLocked(targetTable.getLocked() + 1);
+        tableMapper.updateByPrimaryKeySelective(targetTable);
+    }
+
+    public void setTableUnlocked(int targetTableId) {
+        Table targetTable = tableMapper.selectByPrimaryKey(targetTableId);
+        targetTable.setLocked(targetTable.getLocked() - 1);
+        tableMapper.updateByPrimaryKeySelective(targetTable);
     }
 
     public void dropTable(int tableId) {
@@ -51,6 +64,12 @@ public class SqlRegistrant {
         fieldExample.createCriteria().andTableIdEqualTo(tableId).andStatusEqualTo(true);
         Field field = new Field();
         field.setStatus(false);
+        Optional<List<Field>> fieldOptional = Optional.ofNullable(fieldMapper.selectByExample(fieldExample));
+        fieldOptional.ifPresent(fields ->
+                fields.forEach(f -> {
+                    setFieldUnlocked(f.getFk());
+                    deleteData(f.getId(), null);
+        }));
         fieldMapper.updateByExampleSelective(field, fieldExample);
 
         RowExample rowExample = new RowExample();
@@ -72,6 +91,22 @@ public class SqlRegistrant {
         tableMapper.updateByPrimaryKeySelective(table);
     }
 
+    public void setFieldLocked(int targetFieldId) {
+        Field targetField = fieldMapper.selectByPrimaryKey(targetFieldId);
+        targetField.setLocked(targetField.getLocked() + 1);
+        fieldMapper.updateByPrimaryKeySelective(targetField);
+        setTableLocked(targetField.getTableId());
+    }
+
+    public void setFieldUnlocked(int targetFieldId) {
+        if (targetFieldId > 0) {
+            Field targetField = fieldMapper.selectByPrimaryKey(targetFieldId);
+            targetField.setLocked(targetField.getLocked() - 1);
+            fieldMapper.updateByPrimaryKeySelective(targetField);
+            setTableUnlocked(targetField.getTableId());
+        }
+    }
+
     public void createField(FieldParam fieldParam) {
         int tableId = fieldParam.getTableId();
         for (FieldDomain fieldDomain: fieldParam.getFieldDomains()) {
@@ -81,24 +116,35 @@ public class SqlRegistrant {
             field.setTableId(tableId);
             if (fieldDomain.isForeignkey()) {
                 field.setFk(fieldDomain.getTargetField());
+                setFieldLocked(fieldDomain.getTargetField());
             }
             fieldMapper.insert(field);
         }
     }
 
     public void dropField(int fieldId) {
-        Field field = new Field();
-        field.setId(fieldId);
+        Field field = fieldMapper.selectByPrimaryKey(fieldId);
         field.setStatus(false);
         fieldMapper.updateByPrimaryKeySelective(field);
+        setFieldUnlocked(field.getFk());
+
+        deleteData(fieldId, null);
     }
 
     public void modifyField(FieldWithId fieldWithId) {
+        Field oldField = fieldMapper.selectByPrimaryKey(fieldWithId.getId());
         Field field = new Field();
         BeanUtils.copyProperties(fieldWithId, field);
         field.setType(fieldWithId.getType().name());
-        if (fieldWithId.isForeignkey()) {
+        if (fieldWithId.isForeignkey() && oldField.getFk() != fieldWithId.getTargetField()) {
             field.setFk(fieldWithId.getTargetField());
+            if (oldField.getFk() > 0) {
+                setFieldUnlocked(oldField.getFk());
+            }
+            setTableLocked(fieldWithId.getTargetField());
+        } else if (oldField.getFk() > 0) {
+            setFieldUnlocked(oldField.getFk());
+            field.setFk(-1);
         }
         field.setModifyTime(new Date(System.currentTimeMillis()));
         fieldMapper.updateByPrimaryKeySelective(field);
@@ -161,43 +207,86 @@ public class SqlRegistrant {
         return tableContent;
     }
 
-    public void addRows(RowAddParam rowAddParam) {
-        int tableId = rowAddParam.getTableId();
-        for (List<DataDomain> dataRow: rowAddParam.getFields()) {
+    public void setDataLocked(int targetDataId) {
+        if (targetDataId > 0) {
+            Data data = dataMapper.selectByPrimaryKey(targetDataId);
+            data.setLocked(data.getLocked() + 1);
+            dataMapper.updateByPrimaryKeySelective(data);
+        }
+    }
+
+    public void setDataUnlocked(int targetDataId) {
+        if (targetDataId > 0) {
+            Data data = dataMapper.selectByPrimaryKey(targetDataId);
+            data.setLocked(data.getLocked() - 1);
+            dataMapper.updateByPrimaryKeySelective(data);
+        }
+    }
+
+    public void addRows(RowAddTemp rowAddTemp) {
+        int tableId = rowAddTemp.getTableId();
+        HashMap<String, Integer> targetDataIdMap = rowAddTemp.getTargetDataIdMap();
+        for (List<DataDomain> dataRow: rowAddTemp.getFields()) {
             Row row = new Row();
             row.setTableId(tableId);
             rowMapper.insertSelective(row);
             for (DataDomain dataDomain : dataRow) {
+                int targetDataId = targetDataIdMap.get(dataDomain.getValue());
                 Data data = new Data();
                 BeanUtils.copyProperties(dataDomain, data);
                 data.setRowId(row.getId());
                 data.setTableId(tableId);
+                data.setFk(targetDataId);
+                setDataLocked(targetDataId);
                 dataMapper.insertSelective(data);
             }
         }
     }
 
-    public void updateRow(RowUpdateParam rowUpdateParam) {
-        int rowId = rowUpdateParam.getRowId();
-        for (DataDomain dataDomain: rowUpdateParam.getFields()) {
+    public void updateRow(RowUpdateTemp rowUpdateTemp) {
+        int rowId = rowUpdateTemp.getRowId();
+        for (DataDomain dataDomain: rowUpdateTemp.getFields()) {
+            int targetDataId = rowUpdateTemp.getTargetDataIdMap().get(dataDomain.getValue());
             DataExample dataExample = new DataExample();
             dataExample.createCriteria()
                     .andFieldIdEqualTo(dataDomain.getFieldId())
                     .andRowIdEqualTo(rowId);
             Data data = new Data();
             data.setValue(dataDomain.getValue());
+            data.setModifyTime(new Date(System.currentTimeMillis()));
+            data.setFk(targetDataId);
+            Data oldData = dataMapper.selectByExample(dataExample).get(0);
+            setDataUnlocked(oldData.getFk());
+            setDataLocked(targetDataId);
             dataMapper.updateByExampleSelective(data, dataExample);
         }
+        Row row = rowMapper.selectByPrimaryKey(rowId);
+        row.setModifyTime(new Date(System.currentTimeMillis()));
     }
 
     public void deleteRow(int rowId) {
-        Row row = new Row();
-        row.setId(rowId);
+        Row row = rowMapper.selectByPrimaryKey(rowId);
         row.setStatus(false);
         rowMapper.updateByPrimaryKeySelective(row);
+
+        deleteData(null, rowId);
     }
 
-    public void importExcel(List<Map<String, Object>> excel, Table table) throws FieldNotExistException, TableNotExistException, RowNotExistException {
+    public void deleteData(Integer fieldId, Integer rowId) {
+        DataExample dataExample = new DataExample();
+        if (rowId == null) {
+            dataExample.createCriteria().andFieldIdEqualTo(rowId).andStatusEqualTo(true);
+        } else {
+            dataExample.createCriteria().andRowIdEqualTo(rowId).andStatusEqualTo(true);
+        }
+        List<Data> dataList = dataMapper.selectByExample(dataExample);
+        dataList.forEach(data -> {
+            setDataUnlocked(data.getFk());
+            data.setStatus(false);
+        });
+    }
+
+    public void importExcel(List<Map<String, Object>> excel, Table table) throws FieldNotExistException, TableNotExistException, RowNotExistException, ForeignKeyExistException {
         Set<String> fieldNames = excel.get(0).keySet();
 
         FieldExample fieldExample = new FieldExample();

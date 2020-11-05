@@ -16,9 +16,9 @@ import java.util.List;
 public interface RowService {
     List<List<Data>> listRows(RowListParam rowListParam) throws TableNotExistException, ConditionsException, FieldNotExistException;
 
-    int addRows(RowAddParam rowAddParam) throws TableNotExistException, FieldNotExistException;
+    int addRows(RowAddParam rowAddParam) throws TableNotExistException, FieldNotExistException, ForeignKeyExistException;
 
-    int updateRow(RowUpdateParam rcUpdateParam) throws RowNotExistException, FieldNotExistException;
+    int updateRow(RowUpdateParam rcUpdateParam) throws RowNotExistException, FieldNotExistException, ForeignKeyExistException;
 
     int deleteRow(int rowId) throws RowNotExistException, ForeignKeyExistException;
 }

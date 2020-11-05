@@ -355,6 +355,11 @@ public class DataExample {
             return (Criteria) this;
         }
 
+        public Criteria andValueAnyTo(String symbol, String value) {
+            addCriterion("value " + symbol, value, "value");
+            return (Criteria) this;
+        }
+
         public Criteria andValueEqualTo(String value) {
             addCriterion("value =", value, "value");
             return (Criteria) this;

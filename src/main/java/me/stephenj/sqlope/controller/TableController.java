@@ -89,28 +89,28 @@ public class TableController {
         }
     }
 
-    @ApiOperation("重命名数据表")
-    @RequestMapping(value = "/rename", method = RequestMethod.POST)
-    @ResponseBody
-    public CommonResult renameTable(@RequestParam(value = "tableId")
-                                    @ApiParam("数据表序号") int tableId,
-                                    @RequestParam(value = "newName")
-                                    @ApiParam("数据表新名") String newName,
-                                    HttpServletRequest request) {
-        int count;
-        try {
-            count = tableService.renameTable(tableId, newName);
-        } catch (TableNotExistException | TableExistException e) {
-            LOGGER.debug("rename table failed:{}", tableId);
-            return CommonResult.failed(e.getMessage());
-        }
-        if (count == 1) {
-            logGenerator.log(request, "重命名数据表: " + tableId);
-            LOGGER.debug("rename table success:{}", tableId);
-            return CommonResult.success(tableId);
-        } else {
-            LOGGER.debug("rename table failed:{}", tableId);
-            return CommonResult.failed("删表失败，其他原因");
-        }
-    }
+//    @ApiOperation("重命名数据表")
+//    @RequestMapping(value = "/rename", method = RequestMethod.POST)
+//    @ResponseBody
+//    public CommonResult renameTable(@RequestParam(value = "tableId")
+//                                    @ApiParam("数据表序号") int tableId,
+//                                    @RequestParam(value = "newName")
+//                                    @ApiParam("数据表新名") String newName,
+//                                    HttpServletRequest request) {
+//        int count;
+//        try {
+//            count = tableService.renameTable(tableId, newName);
+//        } catch (TableNotExistException | TableExistException e) {
+//            LOGGER.debug("rename table failed:{}", tableId);
+//            return CommonResult.failed(e.getMessage());
+//        }
+//        if (count == 1) {
+//            logGenerator.log(request, "重命名数据表: " + tableId);
+//            LOGGER.debug("rename table success:{}", tableId);
+//            return CommonResult.success(tableId);
+//        } else {
+//            LOGGER.debug("rename table failed:{}", tableId);
+//            return CommonResult.failed("删表失败，其他原因");
+//        }
+//    }
 }

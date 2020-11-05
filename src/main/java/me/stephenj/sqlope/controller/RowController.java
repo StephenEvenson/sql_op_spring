@@ -61,7 +61,7 @@ public class RowController {
         int count;
         try {
             count = rowService.addRows(rowAddParam);
-        } catch (TableNotExistException | FieldNotExistException e) {
+        } catch (TableNotExistException | FieldNotExistException | ForeignKeyExistException e) {
             LOGGER.debug("add data failed:{}", rowAddParam);
             return CommonResult.failed(e.getMessage());
         }
@@ -83,7 +83,7 @@ public class RowController {
         int count = 0;
         try {
             count = rowService.updateRow(rowUpdateParam);
-        } catch (RowNotExistException | FieldNotExistException e) {
+        } catch (RowNotExistException | FieldNotExistException | ForeignKeyExistException e) {
             LOGGER.debug("update data failed: rowId = {}", rowUpdateParam.getRowId());
             return CommonResult.failed(e.getMessage());
         }

@@ -61,7 +61,7 @@ public class ExcelServiceImpl implements ExcelService {
     }
 
     @Override
-    public int importExcel(MultipartFile file) throws IOException, TableNotExistException, RowNotExistException, FieldNotExistException {
+    public int importExcel(MultipartFile file) throws IOException, TableNotExistException, RowNotExistException, FieldNotExistException, ForeignKeyExistException {
         Optional<MultipartFile> fileOptional = Optional.ofNullable(file);
         if (fileOptional.isPresent()) {
             ExcelReader reader = ExcelUtil.getReader(file.getInputStream());
@@ -79,7 +79,7 @@ public class ExcelServiceImpl implements ExcelService {
         }
     }
 
-    private void readExcel(ExcelReader reader, Table table) throws FieldNotExistException, TableNotExistException, RowNotExistException {
+    private void readExcel(ExcelReader reader, Table table) throws FieldNotExistException, TableNotExistException, RowNotExistException, ForeignKeyExistException {
         int columnCount = reader.getColumnCount();
         if (columnCount > 0) {
             List<Map<String, Object>> readAll = reader.readAll();

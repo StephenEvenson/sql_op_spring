@@ -8,7 +8,7 @@ public class RowAddParam {
     @ApiModelProperty(value = "数据表序号")
     private int tableId;
 
-    @ApiModelProperty(value = "展示的数据字段序号，不填默认展示所有")
+    @ApiModelProperty(value = "添加的数据")
     private List<List<DataDomain>> fields;
 
     public RowAddParam() {

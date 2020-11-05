@@ -97,6 +97,7 @@ public class DataSourceHelper {
                     "`locked` INT DEFAULT 0 COMMENT '被几个数据锁定了', " +
                     "`create_time` DATETIME DEFAULT NOW() COMMENT '数据字段创建时间', " +
                     "`modify_time` DATETIME DEFAULT NOW() COMMENT '数据字段修改时间', " +
+                    "`status` BOOLEAN DEFAULT TRUE COMMENT '是否可用', " +
                     "PRIMARY KEY (`id`), " +
                     "CONSTRAINT data_table_id_fk FOREIGN KEY (`table_id`) REFERENCES `table` (`id`), " +
                     "CONSTRAINT data_row_id_fk FOREIGN KEY (`row_id`) REFERENCES `row` (`id`), " +

@@ -8,7 +8,9 @@ import me.stephenj.sqlope.mbg.model.Data;
 import me.stephenj.sqlope.mbg.model.Field;
 import me.stephenj.sqlope.service.FieldService;
 import me.stephenj.sqlope.service.RowService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,16 +53,20 @@ public class RowServiceImpl implements RowService {
     }
 
     @Override
-    public int addRows(RowAddParam rowAddParam) throws TableNotExistException, FieldNotExistException {
-        sqlCheck.checkAddRow(rowAddParam);
-        sqlRegistrant.addRows(rowAddParam);
+    public int addRows(RowAddParam rowAddParam) throws TableNotExistException, FieldNotExistException, ForeignKeyExistException {
+        RowAddTemp rowAddTemp = new RowAddTemp();
+        BeanUtils.copyProperties(rowAddParam, rowAddTemp);
+        sqlCheck.checkAddRow(rowAddTemp);
+        sqlRegistrant.addRows(rowAddTemp);
         return 1;
     }
 
     @Override
-    public int updateRow(RowUpdateParam rowUpdateParam) throws RowNotExistException, FieldNotExistException {
-        sqlCheck.checkUpdateRow(rowUpdateParam);
-        sqlRegistrant.updateRow(rowUpdateParam);
+    public int updateRow(RowUpdateParam rowUpdateParam) throws RowNotExistException, FieldNotExistException, ForeignKeyExistException {
+        RowUpdateTemp rowUpdateTemp = new RowUpdateTemp();
+        BeanUtils.copyProperties(rowUpdateParam, rowUpdateTemp);
+        sqlCheck.checkUpdateRow(rowUpdateTemp);
+        sqlRegistrant.updateRow(rowUpdateTemp);
         return 1;
     }
 
